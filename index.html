@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guild Raid Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { color: darkblue; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 10px; }
+    label { display: block; margin-top: 10px; }
+    input, textarea { width: 100%; padding: 5px; margin-top: 5px; }
+    button { margin-top: 10px; padding: 8px 15px; cursor: pointer; }
+    .result, .history { margin-top: 20px; }
+    .raid-entry { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+  <h1>⚔️ Guild Raid Calculator</h1>
+
+  <!-- Create Raid -->
+  <div class="box">
+    <h2>Create Raid</h2>
+    <label>Boss Name:</label>
+    <input type="text" id="bossName">
+
+    <label>Date:</label>
+    <input type="date" id="raidDate">
+
+    <label>Participants (comma separated):</label>
+    <textarea id="participants" placeholder="Alice, Bob, John"></textarea>
+
+    <label>Loot Drops (format: Item - Price):</label>
+    <textarea id="drops" placeholder="Legendary Mount - 500&#10;Mythic Sword - 300"></textarea>
+
+    <button onclick="addRaid()">Add Raid</button>
+  </div>
+
+  <!-- Results -->
+  <div class="box result">
+    <h2>Latest Raid Result</h2>
+    <div id="raidResult">No raids yet.</div>
+  </div>
+
+  <!-- History -->
+  <div class="box history">
+    <h2>Raid History & Member Earnings</h2>
+    <div id="raidHistory">No history yet.</div>
+  </div>
+
+<script>
+let raids = JSON.parse(localStorage.getItem("raids")) || [];
+
+function addRaid() {
+  let boss = document.getElementById("bossName").value;
+  let date = document.getElementById("raidDate").value;
+  let participants = document.getElementById("participants").value.split(",").map(p => p.trim()).filter(p => p);
+  let dropsRaw = document.getElementById("drops").value.split("\n");
+  let drops = dropsRaw.map(line => {
+    let [item, price] = line.split("-");
+    return { item: item.trim(), price: parseFloat(price) || 0 };
+  });
+
+  let totalSale = drops.reduce((sum, d) => sum + d.price, 0);
+  let share = participants.length > 0 ? totalSale / participants.length : 0;
+
+  let raid = { boss, date, participants, drops, totalSale, share };
+  raids.push(raid);
+  localStorage.setItem("raids", JSON.stringify(raids));
+
+  displayRaidResult(raid);
+  displayHistory();
+}
+
+function displayRaidResult(raid) {
+  let html = `<strong>${raid.boss}</strong> (${raid.date})<br>`;
+  html += `Total Sale: ${raid.totalSale} USDT<br>`;
+  html += `Participants: ${raid.participants.join(", ")}<br>`;
+  html += `Each Share: ${raid.share.toFixed(2)} USDT<br>`;
+  document.getElementById("raidResult").innerHTML = html;
+}
+
+function displayHistory() {
+  let earnings = {};
+  let html = "";
+  raids.forEach((raid, idx) => {
+    html += `<div class="raid-entry"><strong>Raid ${idx+1}: ${raid.boss}</strong> (${raid.date})<br>`;
+    html += `Total Sale: ${raid.totalSale} USDT<br>`;
+    html += `Participants: ${raid.participants.join(", ")}<br>`;
+    html += `Each Share: ${raid.share.toFixed(2)} USDT</div>`;
+
+    raid.participants.forEach(p => {
+      if (!earnings[p]) earnings[p] = 0;
+      earnings[p] += raid.share;
+    });
+  });
+
+  html += "<h3>💰 Member Total Earnings</h3>";
+  for (let member in earnings) {
+    html += `${member}: ${earnings[member].toFixed(2)} USDT<br>`;
+  }
+
+  document.getElementById("raidHistory").innerHTML = html;
+}
+
+// Load history on page load
+displayHistory();
+</script>
+
+</body>
+</html>
