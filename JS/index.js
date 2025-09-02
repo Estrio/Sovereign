@@ -25,7 +25,16 @@ isSupported().then(ok => { if (ok) getAnalytics(app); }).catch(() => {});
 // ========== ADD RAID ==========
 async function addRaid() {
   let boss = document.getElementById("bossName").value;
-  let date = new Date().toISOString().split("T")[0];
+  let date = new Date().toLocaleString("en-US", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false
+});
+
   let participants = document.getElementById("participants").value
     .split(",")
     .map(p => p.trim())
@@ -331,6 +340,9 @@ async function exportCSV() {
     // CSV Header
     let csv = "Boss,Date,Loot,TotalSale,Participant,Share\n";
 
+    // 🔹 tracker for total payouts
+    let memberTotals = {};
+
     raidsFromDB.forEach(raid => {
       const formatNum = (num) => (num ? Number(num).toLocaleString() : "0");
 
@@ -340,8 +352,8 @@ async function exportCSV() {
       }
 
       let share = raid.share || 0;
-      if (!share && raid.participants && raid.participants.length > 0) {
-        share = Math.floor(totalSale / raid.participants.length);
+      if ((!share || share === 0) && raid.participants && raid.participants.length > 0) {
+        share = totalSale / raid.participants.length;
       }
 
       raid.drops.forEach((drop, dropIndex) => {
@@ -351,16 +363,26 @@ async function exportCSV() {
         if (raid.participants && raid.participants.length > 0) {
           csv += `"${raid.boss}","${raid.date}","${lootName} (${formatNum(lootPrice)})","${formatNum(totalSale)}","${raid.participants[0]}","${formatNum(share)}"\n`;
 
+          // accumulate
+          memberTotals[raid.participants[0]] = (memberTotals[raid.participants[0]] || 0) + share;
+
           for (let i = 1; i < raid.participants.length; i++) {
             csv += `,,,,"${raid.participants[i]}","${formatNum(share)}"\n`;
+            memberTotals[raid.participants[i]] = (memberTotals[raid.participants[i]] || 0) + share;
           }
         } else {
           csv += `"${raid.boss}","${raid.date}","${lootName} (${formatNum(lootPrice)})","${formatNum(totalSale)}",,\n`;
         }
       });
 
-      // total row
-      csv += `,,,,"Total Sale","${formatNum(totalSale)}"\n`;
+      // total row per raid
+      csv += `,,,,"Total Sale","${formatNum(totalSale)}"\n\n`;
+    });
+
+    // 🔹 Append member payouts summary
+    csv += "\nParticipant,Payout\n";
+    Object.keys(memberTotals).forEach(member => {
+      csv += `"${member}","${memberTotals[member].toFixed(2)}"\n`;
     });
 
     // Download CSV
@@ -376,5 +398,6 @@ async function exportCSV() {
     console.error("Error exporting CSV: ", e);
   }
 }
+
 window.exportCSV = exportCSV;
 
