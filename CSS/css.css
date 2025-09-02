@@ -1,6 +1,6 @@
 /* General Reset */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Poppins', sans-serif;
   margin: 0;
   padding: 20px;
   background: #222;
@@ -131,7 +131,49 @@ button:hover {
   border-radius: 4px;
   border: 1px solid #555;
 }
+
+.loot-entry:hover,
+.member-entry:hover {
+  background: #444455;
+  transform: scale(1.02);
+  transition: all 0.2s ease-in-out;
+}
+
 .loot-entry strong,
 .member-entry strong {
   color: #00ff99;
+}
+
+.box,
+.loot-entry,
+.member-entry {
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+.raid-entry {
+  background: #323245;
+}
+
+.right-side::-webkit-scrollbar {
+  width: 6px;
+}
+.right-side::-webkit-scrollbar-thumb {
+  background: #00c3ff;
+  border-radius: 3px;
+}
+
+button {
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+}
+
+h1 {
+  text-shadow: 0 0 6px rgba(255,215,0,0.6);
+}
+h2 {
+  text-shadow: 0 0 4px rgba(0,195,255,0.5);
 }

@@ -32,16 +32,26 @@ async function addRaid() {
     .filter(p => p);
 
   // ✅ include loot
-  let lootInput = document.getElementById("lootItem").value.trim();
-  if (lootInput && !lootItems.includes(lootInput)) {
-    lootItems.push(lootInput);
-  }
+let lootInput = document.getElementById("lootItem").value.trim();
+let lootPrice = parseFloat(document.getElementById("lootPrice")?.value) || 0;
 
-  let drops = [...lootItems];
-  let totalSale = drops.length * 100; // example calculation
-  let share = participants.length > 0 ? totalSale / participants.length : 0;
+if (lootInput && !lootItems.find(l => l.name === lootInput)) {
+  lootItems.push({ name: lootInput, price: lootPrice });
+}
 
-  let raid = { boss, date, participants, drops, totalSale, share };
+let drops = [...lootItems];
+let totalSale = drops.reduce((sum, item) => sum + (item.price || 0), 0);
+let share = participants.length > 0 ? totalSale / participants.length : 0;
+
+
+
+console.log("Drops being saved:", drops);
+console.log("Participants being saved:", participants);
+console.log("Total Sale:", totalSale, "Share:", share);
+
+
+let raid = { boss, date, participants, drops, totalSale, share };
+
 
   try {
     let docRef = await addDoc(collection(db, "raids"), raid);
@@ -72,11 +82,10 @@ function displayRaidResult(raid) {
   let html = `<strong>${raid.boss}</strong> (${raid.date})<br>`;
   html += `Participants: ${raid.participants.join(", ")}<br>`;
   if (raid.drops && raid.drops.length > 0) {
-    html += `Loot: ${raid.drops.join(", ")}<br>`;
+    html += `Loot: ${raid.drops.map(d => typeof d === "string" ? d : `${d.name} (${d.price || 0})`).join(", ")}<br>`;
   }
   document.getElementById("raidResult").innerHTML = html;
 }
-
 
 // ========== DISPLAY HISTORY ==========
 function displayHistory() {
@@ -86,7 +95,7 @@ function displayHistory() {
       <strong>Raid ${idx + 1}: ${raid.boss}</strong> (${raid.date})<br>
       Participants: ${raid.participants.join(", ")}<br>`;
     if (raid.drops && raid.drops.length > 0) {
-      html += `Loot: ${raid.drops.join(", ")}<br>`;
+      html += `Loot: ${raid.drops.map(d => typeof d === "string" ? d : `${d.name} (${d.price || 0})`).join(", ")}<br>`;
     }
     html += `<button onclick="deleteRaid(${idx})">🗑️ Delete</button>
     </div>`;
@@ -131,24 +140,47 @@ async function loadRegisteredLoot() {
     querySnapshot.forEach(docSnap => {
       let raidData = docSnap.data();
       if (raidData.drops && Array.isArray(raidData.drops)) {
-        allLoot.push(...raidData.drops);
+        // merge loot from all raids
+        raidData.drops.forEach(drop => {
+          if (typeof drop === "string") {
+            allLoot.push({ name: drop, price: 0 });
+          } else {
+            allLoot.push(drop);
+          }
+        });
       }
     });
 
-    allLoot = [...new Set(allLoot)]; // unique only
+    // remove duplicates by name
+    let uniqueLoot = [];
+    let seen = new Set();
+    allLoot.forEach(l => {
+      if (!seen.has(l.name)) {
+        seen.add(l.name);
+        uniqueLoot.push(l);
+      }
+    });
 
     let lootListDiv = document.getElementById("lootList");
-    if (allLoot.length === 0) {
+    if (uniqueLoot.length === 0) {
       lootListDiv.innerHTML = "No loot registered yet.";
     } else {
-      lootListDiv.innerHTML = allLoot
-        .map((item, i) => `<div class="loot-entry">${i + 1}. ${item}</div>`)
+      lootListDiv.innerHTML = uniqueLoot
+        .map(
+          (item, i) => `
+          <div class="loot-entry">
+            ${i + 1}. <strong>${item.name}</strong>
+            <input type="number" value="${item.price || 0}" 
+              onchange="updateLootPrice('${item.name}', this.value)">
+          </div>`
+        )
         .join("");
     }
   } catch (e) {
     console.error("Error loading registered loot: ", e);
   }
 }
+
 
 // ========== OCR (Tesseract) ==========
 const guildMembers = [
@@ -190,29 +222,159 @@ window.addRaid = addRaid;
 
 
 // ========== REGISTERED MEMBERS ==========
+// ========== REGISTERED MEMBERS ==========
 async function loadRegisteredMembers() {
   try {
     const querySnapshot = await getDocs(collection(db, "raids"));
-    let allMembers = [];
+    let memberEarnings = {};
 
     querySnapshot.forEach(docSnap => {
       let raidData = docSnap.data();
-      if (raidData.participants && Array.isArray(raidData.participants)) {
-        allMembers.push(...raidData.participants);
-      }
+      if (!raidData.participants || !Array.isArray(raidData.participants)) return;
+
+      let totalSale = raidData.drops?.reduce((sum, item) => {
+        if (typeof item === "string") return sum; // old string loot
+        return sum + (item.price || 0);
+      }, 0) || 0;
+
+      let share = raidData.participants.length > 0
+        ? totalSale / raidData.participants.length
+        : 0;
+
+      raidData.participants.forEach(member => {
+        if (!memberEarnings[member]) memberEarnings[member] = 0;
+        memberEarnings[member] += share;
+      });
     });
 
-    allMembers = [...new Set(allMembers)]; // unique members
-
     let membersDiv = document.getElementById("membersList");
-    if (allMembers.length === 0) {
+    let names = Object.keys(memberEarnings);
+
+    if (names.length === 0) {
       membersDiv.innerHTML = "No members registered yet.";
     } else {
-      membersDiv.innerHTML = allMembers
-        .map((m, i) => `<div class="member-entry">${i + 1}. ${m}</div>`)
+      membersDiv.innerHTML = names
+        .map((m, i) => `<div class="member-entry">${i + 1}. ${m} — ${memberEarnings[m].toFixed(2)} USDT</div>`)
         .join("");
     }
   } catch (e) {
     console.error("Error loading registered members: ", e);
   }
 }
+
+
+async function updateLootPrice(lootName, newPrice) {
+  try {
+    const querySnapshot = await getDocs(collection(db, "raids"));
+    querySnapshot.forEach(async docSnap => {
+      let raidData = docSnap.data();
+      if (raidData.drops && Array.isArray(raidData.drops)) {
+        let updated = false;
+        let newDrops = raidData.drops.map(drop => {
+          if (typeof drop === "string") {
+            if (drop === lootName) {
+              updated = true;
+              return { name: drop, price: Number(newPrice) };
+            }
+            return { name: drop, price: 0 };
+          } else if (drop.name === lootName) {
+            updated = true;
+            return { ...drop, price: Number(newPrice) };
+          }
+          return drop;
+        });
+
+        if (updated) {
+          // 🔹 Recalculate totalSale & share
+          let totalSale = newDrops.reduce((sum, item) => sum + (item.price || 0), 0);
+          let share = raidData.participants.length > 0
+            ? totalSale / raidData.participants.length
+            : 0;
+
+          await updateDoc(doc(db, "raids", docSnap.id), {
+            drops: newDrops,
+            totalSale,
+            share
+          });
+          console.log(`✅ Updated price of ${lootName} to ${newPrice} in raid ${docSnap.id}`);
+        }
+      }
+    });
+
+    // refresh UI
+// refresh UI
+displayHistory();
+loadRegisteredLoot();
+loadRegisteredMembers(); // ✅ refresh members too
+
+  } catch (e) {
+    console.error("Error updating loot price: ", e);
+  }
+}
+
+window.updateLootPrice = updateLootPrice;
+
+async function exportCSV() {
+  try {
+    const querySnapshot = await getDocs(collection(db, "raids"));
+    let raidsFromDB = [];
+
+    querySnapshot.forEach(docSnap => {
+      raidsFromDB.push({ id: docSnap.id, ...docSnap.data() });
+    });
+
+    if (raidsFromDB.length === 0) {
+      alert("No raids to export.");
+      return;
+    }
+
+    // CSV Header
+    let csv = "Boss,Date,Loot,TotalSale,Participant,Share\n";
+
+    raidsFromDB.forEach(raid => {
+      const formatNum = (num) => (num ? Number(num).toLocaleString() : "0");
+
+      let totalSale = raid.totalSale || 0;
+      if (!totalSale && raid.drops) {
+        totalSale = raid.drops.reduce((sum, d) => sum + (d.price || 0), 0);
+      }
+
+      let share = raid.share || 0;
+      if (!share && raid.participants && raid.participants.length > 0) {
+        share = Math.floor(totalSale / raid.participants.length);
+      }
+
+      raid.drops.forEach((drop, dropIndex) => {
+        const lootName = drop.name || "Unknown";
+        const lootPrice = drop.price || 0;
+
+        if (raid.participants && raid.participants.length > 0) {
+          csv += `"${raid.boss}","${raid.date}","${lootName} (${formatNum(lootPrice)})","${formatNum(totalSale)}","${raid.participants[0]}","${formatNum(share)}"\n`;
+
+          for (let i = 1; i < raid.participants.length; i++) {
+            csv += `,,,,"${raid.participants[i]}","${formatNum(share)}"\n`;
+          }
+        } else {
+          csv += `"${raid.boss}","${raid.date}","${lootName} (${formatNum(lootPrice)})","${formatNum(totalSale)}",,\n`;
+        }
+      });
+
+      // total row
+      csv += `,,,,"Total Sale","${formatNum(totalSale)}"\n`;
+    });
+
+    // Download CSV
+    let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "raid_history.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (e) {
+    console.error("Error exporting CSV: ", e);
+  }
+}
+window.exportCSV = exportCSV;
+
