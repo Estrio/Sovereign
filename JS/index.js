@@ -1,11 +1,11 @@
 // ========== FIREBASE IMPORTS ==========
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
 import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc} from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 // 🔹 Global variables
-let lootItems = [];
 let raids = JSON.parse(localStorage.getItem("raids")) || [];
+let lootItems = []; // ✅ loot storage
 
 // ========== FIREBASE CONFIG ==========
 const firebaseConfig = {
@@ -31,14 +31,14 @@ async function addRaid() {
     .map(p => p.trim())
     .filter(p => p);
 
-  // Add loot
+  // ✅ include loot
   let lootInput = document.getElementById("lootItem").value.trim();
   if (lootInput && !lootItems.includes(lootInput)) {
     lootItems.push(lootInput);
   }
 
   let drops = [...lootItems];
-  let totalSale = drops.length * 100; // example value
+  let totalSale = drops.length * 100; // example calculation
   let share = participants.length > 0 ? totalSale / participants.length : 0;
 
   let raid = { boss, date, participants, drops, totalSale, share };
@@ -57,55 +57,53 @@ async function addRaid() {
 
   displayRaidResult(raid);
   displayHistory();
+  loadRegisteredLoot();
+loadRegisteredMembers(); // ✅ add this
 
+  
+
+  // ✅ reset loot input
   lootItems = [];
   document.getElementById("lootItem").value = "";
-  loadRegisteredLoot();
-  loadRegisteredMembers();
 }
-window.addRaid = addRaid;
 
-// ========== DISPLAY FUNCTIONS ==========
+// ========== DISPLAY RAID RESULT ==========
 function displayRaidResult(raid) {
   let html = `<strong>${raid.boss}</strong> (${raid.date})<br>`;
-  html += `Total Sale: ${raid.totalSale} USDT<br>`;
   html += `Participants: ${raid.participants.join(", ")}<br>`;
-  html += `Each Share: ${raid.share.toFixed(2)} USDT<br>`;
   if (raid.drops && raid.drops.length > 0) {
     html += `Loot: ${raid.drops.join(", ")}<br>`;
   }
   document.getElementById("raidResult").innerHTML = html;
-
-  displayHistory();
-  loadRegisteredLoot();
-  loadRegisteredMembers();
 }
 
+
+// ========== DISPLAY HISTORY ==========
 function displayHistory() {
   let html = "";
   raids.forEach((raid, idx) => {
     html += `<div class="raid-entry">
       <strong>Raid ${idx + 1}: ${raid.boss}</strong> (${raid.date})<br>
-      Total Sale: ${raid.totalSale} USDT<br>
-      Participants: ${raid.participants.join(", ")}<br>
-      Each Share: ${raid.share.toFixed(2)} USDT<br>`;
+      Participants: ${raid.participants.join(", ")}<br>`;
     if (raid.drops && raid.drops.length > 0) {
       html += `Loot: ${raid.drops.join(", ")}<br>`;
     }
     html += `<button onclick="deleteRaid(${idx})">🗑️ Delete</button>
     </div>`;
   });
-
   document.getElementById("raidHistory").innerHTML = html;
 }
+
 
 // ========== DELETE RAID ==========
 async function deleteRaid(index) {
   const raid = raids[index];
 
+  // 🔹 remove locally
   raids.splice(index, 1);
   localStorage.setItem("raids", JSON.stringify(raids));
 
+  // 🔹 remove from Firestore
   try {
     if (raid.id) {
       await deleteDoc(doc(db, "raids", raid.id));
@@ -118,8 +116,9 @@ async function deleteRaid(index) {
   }
 
   displayHistory();
-  loadRegisteredLoot();
-  loadRegisteredMembers();
+loadRegisteredLoot();
+loadRegisteredMembers(); // ✅ add this
+
 }
 window.deleteRaid = deleteRaid;
 
@@ -129,23 +128,66 @@ async function loadRegisteredLoot() {
     const querySnapshot = await getDocs(collection(db, "raids"));
     let allLoot = [];
 
-    querySnapshot.forEach(doc => {
-      let raidData = doc.data();
+    querySnapshot.forEach(docSnap => {
+      let raidData = docSnap.data();
       if (raidData.drops && Array.isArray(raidData.drops)) {
         allLoot.push(...raidData.drops);
       }
     });
 
-    allLoot = [...new Set(allLoot)];
+    allLoot = [...new Set(allLoot)]; // unique only
 
     let lootListDiv = document.getElementById("lootList");
-    lootListDiv.innerHTML = allLoot.length === 0
-      ? "No loot registered yet."
-      : allLoot.map((item, i) => `<div class="loot-entry">${i + 1}. ${item}</div>`).join("");
+    if (allLoot.length === 0) {
+      lootListDiv.innerHTML = "No loot registered yet.";
+    } else {
+      lootListDiv.innerHTML = allLoot
+        .map((item, i) => `<div class="loot-entry">${i + 1}. ${item}</div>`)
+        .join("");
+    }
   } catch (e) {
     console.error("Error loading registered loot: ", e);
   }
 }
+
+// ========== OCR (Tesseract) ==========
+const guildMembers = [
+  "zheyn","choi","pendragon","alyssa","mia","arthur","seraphine","jaycol",
+  "t4g","reiji","patch01","tulisan05","hoshina","thirdyboy","psychee",
+  "maze r","eisen","suprimo","excarlet","kunsume","hoshina","rhy7",
+  "sapphirebleu","jalapenio","dukesa","xlyz","ynaaa","pepper0o8","shiin"
+];
+
+async function extractMembersFromImage(file) {
+  const { createWorker } = Tesseract;
+  const worker = await createWorker("eng", 1, { logger: m => console.log(m) });
+  const result = await worker.recognize(file);
+  await worker.terminate();
+
+  let words = result.data.text
+    .split(/\s+|\n/)
+    .map(w => w.trim().toLowerCase())
+    .filter(Boolean);
+
+  return words.filter(w => guildMembers.includes(w));
+}
+
+document.getElementById("imageUpload").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  let members = await extractMembersFromImage(file);
+  document.getElementById("participants").value = members.join(", ");
+});
+
+// ========== INIT ==========
+// ========== INIT ==========
+displayHistory();
+loadRegisteredLoot();
+loadRegisteredMembers();   // ✅ new line
+window.addRaid = addRaid;
+
+
 
 // ========== REGISTERED MEMBERS ==========
 async function loadRegisteredMembers() {
@@ -153,25 +195,24 @@ async function loadRegisteredMembers() {
     const querySnapshot = await getDocs(collection(db, "raids"));
     let allMembers = [];
 
-    querySnapshot.forEach(doc => {
-      let raidData = doc.data();
+    querySnapshot.forEach(docSnap => {
+      let raidData = docSnap.data();
       if (raidData.participants && Array.isArray(raidData.participants)) {
         allMembers.push(...raidData.participants);
       }
     });
 
-    allMembers = [...new Set(allMembers)];
+    allMembers = [...new Set(allMembers)]; // unique members
 
     let membersDiv = document.getElementById("membersList");
-    membersDiv.innerHTML = allMembers.length === 0
-      ? "No members registered yet."
-      : allMembers.map((m, i) => `<div class="member-entry">${i + 1}. ${m}</div>`).join("");
+    if (allMembers.length === 0) {
+      membersDiv.innerHTML = "No members registered yet.";
+    } else {
+      membersDiv.innerHTML = allMembers
+        .map((m, i) => `<div class="member-entry">${i + 1}. ${m}</div>`)
+        .join("");
+    }
   } catch (e) {
     console.error("Error loading registered members: ", e);
   }
 }
-
-// Load on startup
-displayHistory();
-loadRegisteredLoot();
-loadRegisteredMembers();
