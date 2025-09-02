@@ -6,55 +6,53 @@
   <link rel="stylesheet" href="CSS/css.css">
 </head>
 <body>
-
   <h1>⚔️ Guild Raid Calculator</h1>
 
-  <!-- Create Raid -->
-  <div class="box">
-    <h2>Boss Name</h2>
-    <label for="raidName">Boss Name:</label>
-    <input type="text" id="bossName" placeholder="Enter Boss name">
+  <div class="container">
+    <div class="left-side">
+      <!-- Create Raid -->
+      <div class="box">
+        <h2>Boss Name</h2>
+        <label for="raidName">Boss Name:</label>
+        <input type="text" id="bossName" placeholder="Enter Boss name">
 
-<div class="items">
-  <label for="totalLoot">Loot Item:</label>
-  <input type="search" id="lootItem" list="lootOptions" placeholder="Search for loot">
+        <div class="items">
+          <label for="totalLoot">Loot Item:</label>
+          <input type="search" id="lootItem" list="lootOptions" placeholder="Search for loot">
+        </div>
 
-  <datalist id="lootOptions">
-    <option value="Legendary Mount">
-    <option value="Mythic Sword">
-    <option value="Epic Armor">
-    <option value="Rare Gem">
-    <option value="Ancient Relic">
-  </datalist>
-</div>
+        <div class="members">
+          <label for="imageUpload">Upload Raid Screenshot:</label>
+          <input type="file" id="imageUpload" accept="image/*">
 
-    <div class="members">
-  <label for="imageUpload">Upload Raid Screenshot:</label>
-<input type="file" id="imageUpload" accept="image/*">
+          <label for="participants">Detected Members:</label>
+          <textarea id="participants" placeholder="Names will appear here"></textarea>
+        </div>
 
+        <button onclick="addRaid()">Add Raid</button>
+      </div>
 
-  <label for="participants">Detected Members:</label>
-  <textarea id="participants" placeholder="Names will appear here"></textarea>
-</div>
+      <!-- Results -->
+      <div class="box result">
+        <h2>Latest Raid Result</h2>
+        <div id="raidResult">No raids yet.</div>
+      </div>
 
+      <!-- History -->
+      <div class="box history">
+        <h2>Raid History</h2>
+        <div id="raidHistory">No history yet.</div>
+      </div>
+    </div>
 
-    <button onclick="addRaid()">Add Raid</button>
+    <!-- Loot Box -->
+    <div class="box loot-box">
+      <h2>Registered Loot</h2>
+      <div id="lootList">No loot added yet.</div>
+    </div>
   </div>
 
-  <!-- Results -->
-  <div class="box result">
-    <h2>Latest Raid Result</h2>
-    <div id="raidResult">No raids yet.</div>
-  </div>
-
-  <!-- History -->
-  <div class="box history">
-    <h2>Raid History & Member Earnings</h2>
-    <div id="raidHistory">No history yet.</div>
-  </div>
-<script type="module" src="JS/index.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
-
+  <script type="module" src="JS/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </body>
 </html>
