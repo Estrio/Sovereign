@@ -1,0 +1,69 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #eee;
+}
+
+/* Header Section */
+header {
+  background: #222;
+  padding: 30px 20px;
+  text-align: center;
+  border-bottom: 2px solid #ff6600;
+}
+header h1 {
+  margin: 10px 0 5px;
+  color: #ffd700;
+}
+header p {
+  color: #aaa;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Faction Logo */
+.faction-logo {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  border: 2px solid #444;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+
+/* Game Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+.card {
+  background: #1c1c2c;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+.card:hover {
+  transform: scale(1.05);
+}
+.logo {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+.title {
+  font-size: 1.2rem;
+  color: #00c3ff;
+  margin: 10px 0;
+}
+.desc {
+  font-size: 0.9rem;
+  color: #aaa;
+}

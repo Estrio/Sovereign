@@ -27,7 +27,7 @@ h2 {
 /* Box Containers */
 .box {
   border: 1px solid #444;
-  padding: 20px;
+  padding: 5%;
   margin: 15px auto;
   max-width: 700px;
   border-radius: 8px;
