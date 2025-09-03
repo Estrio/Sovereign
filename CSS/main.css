@@ -5,6 +5,38 @@ body {
   color: #eee;
 }
 
+/* Fullscreen video splash */
+#splash {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+#splash video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Hide splash after animation */
+#splash.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1s ease-out;
+}
+
+/* Hide login/register/dashboard initially */
+#login-panel, #register-panel, #dashboard {
+  display: none;
+}
+#login-panel.show, #register-panel.show, #dashboard.show {
+  display: flex;
+}
+
 /* Header Section */
 header {
   background: #222;
@@ -39,8 +71,8 @@ header p {
   grid-template-columns: repeat(3, 1fr); /* 3 cards per row */
   gap: 25px;
   padding: 40px;
-  max-width: 1200px;      /* Keep layout neat */
-  margin: 0 auto;         /* Center grid on page */
+  max-width: 1200px;  /* Keep layout neat */
+  margin: 0 auto; /* Center grid on page */
 }
 
 .card {
