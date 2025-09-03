@@ -109,3 +109,4 @@ function logout() {
   signOut(auth);
 }
 window.logout = logout;
+window.switchPanel = switchPanel;
