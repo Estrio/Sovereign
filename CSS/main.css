@@ -36,34 +36,82 @@ header p {
 /* Game Grid */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  padding: 20px;
+  grid-template-columns: repeat(3, 1fr); /* 3 cards per row */
+  gap: 25px;
+  padding: 40px;
+  max-width: 1200px;      /* Keep layout neat */
+  margin: 0 auto;         /* Center grid on page */
 }
+
 .card {
-  background: #1c1c2c;
+  position: relative;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  transition: transform 0.2s;
+  color: #fff;
   cursor: pointer;
+  overflow: hidden;
+  height: 260px;
+
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  transition: transform 0.25s, box-shadow 0.25s;
 }
+
 .card:hover {
   transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6);
 }
+
+/* Overlay for text readability */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  border-radius: 12px;
+}
+
+.card * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Background images per game */
+.card.lordnine {
+  background-image: url("/images/lordnine-logo.jpg");
+}
+
+/*just add here for image*/
+
+
 .logo {
   width: 80px;
   height: 80px;
   object-fit: cover;
   margin-bottom: 10px;
+  border-radius: 50%;
+  border: 2px solid #ffd700;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  transform-style: preserve-3d;
 }
+
+/* When card is hovered → logo expands in 3D */
+.card:hover .logo {
+  transform: scale(1.3) rotateX(12deg) rotateY(12deg);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.6);
+}
+
+
 .title {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: bold;
   color: #00c3ff;
   margin: 10px 0;
 }
+
 .desc {
-  font-size: 0.9rem;
-  color: #aaa;
+  font-size: 0.95rem;
+  color: #bbb;
 }

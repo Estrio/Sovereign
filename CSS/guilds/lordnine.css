@@ -26,30 +26,61 @@ header p {
   color: #aaa;
 }
 
-/* ===== Grid Layout ===== */
+/* Game Grid */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-  padding: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-template-columns: repeat(3, 1fr); /* 3 cards per row */
+  gap: 25px;
+  padding: 40px;
+  max-width: 1200px;      /* Keep layout neat */
+  margin: 0 auto;         /* Center grid on page */
 }
 
-/* ===== Card Style ===== */
 .card {
-  background: #1c1c1c;
+  position: relative;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  height: 260px;
+    background: #1c1c1c;
   border: 1px solid #333;
   border-radius: 12px;
   padding: 20px;
   text-align: center;
   transition: all 0.3s ease;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  transition: transform 0.25s, box-shadow 0.25s;
 }
+
 .card:hover {
-  transform: translateY(-5px);
+  transform: scale(1.05) translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6);
   border-color: #ff6600;
-  box-shadow: 0 8px 20px rgba(255, 102, 0, 0.2);
+}
+
+/* Overlay for text readability */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  border-radius: 12px;
+}
+
+.card * {
+  position: relative;
+  z-index: 1;
+}
+
+.card.anbil {
+  background-image: url("/images/anbil-logo.png");
 }
 
 /* ===== Logo ===== */
@@ -57,10 +88,18 @@ header p {
   width: 80px;
   height: 80px;
   object-fit: cover;
+  margin-bottom: 10px;
   border-radius: 50%;
-  border: 2px solid #555;
-  margin-bottom: 15px;
+  border: 2px solid #ffd700;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  transform-style: preserve-3d;
 }
+
+/* When card is hovered → logo expands in 3D */
+.card:hover .logo {
+  transform: scale(1.3) rotateX(12deg) rotateY(12deg);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.6);
+} 
 
 /* ===== Titles & Desc ===== */
 .title {
