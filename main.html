@@ -8,12 +8,14 @@
 <body>
 
  <!-- 🔹 Splash Screen -->
-  <div id="splash">
-    <video autoplay muted>
-      <source src="/images/0903.mp4" type="video/mp4">
-      Your browser does not support video playback.
-    </video>
-  </div>
+<div id="splash">
+  <video autoplay muted>
+    <source src="/images/0903.mp4" type="video/mp4">
+    Your browser does not support video playback.
+  </video>
+  <button id="skip-btn">Skip</button>
+</div>
+
 
   <!-- Header -->
   <header>
@@ -34,7 +36,7 @@
   </div>
 
   <!-- Login Panel -->
-  <div id="login-panel" class="auth-panel" style="display:flex;">
+<div id="login-panel" class="auth-panel" style="display:none;">
     <div class="auth-card">
       <h2>⚔ Login</h2>
       <form id="login-form">
@@ -47,7 +49,7 @@
   </div>
 
   <!-- Register Panel -->
-  <div id="register-panel" class="auth-panel">
+<div id="register-panel" class="auth-panel" style="display:none;">
     <div class="auth-card">
       <h2>⚔ Register</h2>
       <form id="register-form">
@@ -60,6 +62,6 @@
       <p>Already have an account? <a href="#" onclick="switchPanel('register','login')">Login</a></p>
     </div>
   </div>
-  <script src="/JS/main.js"></script> 
+  <script type="module" src="/JS/main.js"></script> 
 </body>
 </html>
