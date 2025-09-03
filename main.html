@@ -6,26 +6,51 @@
   <link rel="stylesheet" href="/CSS/main.css">
 </head>
 <body>
-  <!-- Page 1: Games -->
+  <!-- Header -->
   <header>
     <img src="/images/Sovereign-logo.png" alt="Sovereign Logo" class="faction-logo">
     <h1>⚔ Sovereign Faction</h1>
     <p>Select a game to view its guilds</p>
   </header>
 
-  <div class="grid">
-    <div class="card lordnine" onclick="openGame('/html/guilds/lordnine')">
-      <img src="/images/lordnine-logo.jpg" alt="Lordnine" class="logo">
-      <div class="title">LordNine</div>
-      <div class="desc">Classic MMORPG guilds under Sovereign.</div>
+  <!-- Dashboard (hidden until login) -->
+  <div id="dashboard" style="display:none;">
+    <div class="grid">
+      <div class="card lordnine" onclick="openGame('/html/guilds/lordnine')">
+        <img src="/images/lordnine-logo.jpg" alt="Lordnine" class="logo">
+        <div class="title">LordNine</div>
+        <div class="desc">Classic MMORPG guilds under Sovereign.</div>
+      </div>
     </div>
   </div>
 
-  <script>
-    function openGame(game) {
-      // 🚀 For now just redirect to a new page
-      window.location.href = game + ".html";
-    }
-  </script>
+  <!-- Login Panel -->
+  <div id="login-panel" class="auth-panel" style="display:flex;">
+    <div class="auth-card">
+      <h2>⚔ Login</h2>
+      <form id="login-form">
+        <input type="text" placeholder="Username" required>
+        <input type="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+      <p>Don’t have an account? <a href="#" onclick="switchPanel('login','register')">Register</a></p>
+    </div>
+  </div>
+
+  <!-- Register Panel -->
+  <div id="register-panel" class="auth-panel">
+    <div class="auth-card">
+      <h2>⚔ Register</h2>
+      <form id="register-form">
+        <input type="text" placeholder="Username" required>
+        <input type="email" placeholder="Email" required>
+        <input type="password" placeholder="Password" required>
+        <input type="password" placeholder="Confirm Password" required>
+        <button type="submit">Register</button>
+      </form>
+      <p>Already have an account? <a href="#" onclick="switchPanel('register','login')">Login</a></p>
+    </div>
+  </div>
+  <script src="/JS/main.js"></script> 
 </body>
 </html>
