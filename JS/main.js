@@ -22,8 +22,12 @@ const auth = getAuth(app);
 
 // ========== NAVIGATE TO GAME ==========
 function openGame(game) {
-  window.location.href = game + ".html";
+  document.body.classList.add("fade-out"); // trigger animation
+  setTimeout(() => {
+    window.location.href = game + ".html";
+  }, 600); // wait until fade finishes
 }
+window.openGame = openGame;
 
 // ========== PANEL SWITCH ==========
 function switchPanel(from, to) {

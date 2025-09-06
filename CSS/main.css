@@ -5,6 +5,16 @@ body {
   color: #eee;
 }
 
+body {
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
+body.fade-out {
+  opacity: 0;
+}
+
+
 #dashboard {
   position: relative; /* allows absolute positioning inside */
   display: flex;
